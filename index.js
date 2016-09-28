@@ -23,7 +23,7 @@ var _config  = {
         ssl: true
     },
     _defaultClient = {
-        ip: '0.0.0.0'
+        // ip: '0.0.0.0'
     };
 
 var API_URL = '//www.woopra.com/track/';
