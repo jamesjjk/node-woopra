@@ -16,6 +16,7 @@
 
 var http = require('http');
 var https = require('https');
+var jsonp = require('./jsonp');
 
 var _extend = require('util')._extend;
 
@@ -73,7 +74,6 @@ Woopra.prototype = {
      */
     request: function(endpoint, data, cb) {
         var protocol = this.options.ssl ? 'https' : 'http',
-            method = this.options.ssl ? https.get : http.get,
             _data = data || {},
             nonPrefixedEventProps = {},
             params = [];
@@ -101,16 +101,26 @@ Woopra.prototype = {
         }
 
         params.push(buildUrlParams(nonPrefixedEventProps));
+        var qurl = protocol + ':' + API_URL + endpoint + '?' + params.join('&');
 
-        return method(protocol + ':' + API_URL + endpoint + '?' + params.join('&'), function(res) {
-            if (typeof cb === 'function') {
-                cb(null, res.statusCode);
-            }
-        }).on('error', function(e) {
-            if (typeof cb === 'function') {
-                cb(e, null);
-            }
-        });
+        if(typeof window !== 'undefined'){
+          jsonp.get(qurl, function(res){
+              if (typeof cb === 'function') {
+                  cb(null, res);
+              }
+          })
+        } else {
+          var method = (protocol === 'https') ? https.get : http.get;
+          return method(qurl, function(res) {
+              if (typeof cb === 'function') {
+                  cb(null, res.statusCode);
+              }
+          }).on('error', function(e) {
+              if (typeof cb === 'function') {
+                  cb(e, null);
+              }
+          });
+        }
     },
 
     /**
